@@ -154,8 +154,7 @@ jobs:
           TRIVY_PASSWORD: ${{ secrets.DOCKERHUB_TOKEN }}
 
       
-
-update_cd_repo:
+  update_cd_repo:
   runs-on: ubuntu-latest
   needs: trivy-image-scan
 
