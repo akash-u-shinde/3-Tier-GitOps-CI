@@ -132,7 +132,7 @@ jobs:
         uses: aquasecurity/trivy-action@v0.24.0
         with:
           scan-type: image   
-          image_ref: akashshinde1808/backend:${{ env.IMAGE_TAG }}  
+          image-ref: akashshinde1808/backend:${{ env.IMAGE_TAG }}  
           format: table
           exit-code: '1'
           ignore-unfixed: false
@@ -143,7 +143,7 @@ jobs:
         uses: aquasecurity/trivy-action@v0.24.0
         with:
           scan-type: image   
-          image_ref: akashshinde1808/frontend:${{ env.IMAGE_TAG }}  
+          image-ref: akashshinde1808/frontend:${{ env.IMAGE_TAG }}  
           format: table
           exit-code: '1' 
           ignore-unfixed: false
