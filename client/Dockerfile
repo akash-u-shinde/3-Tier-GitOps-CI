@@ -1,9 +1,9 @@
 # Stage 1: Build React App
-FROM node:18-alpine AS build
+FROM node:20-alpine AS build
 
 WORKDIR /app
 COPY package*.json ./
-RUN npm install
+RUN npm ci
 COPY . .
 
 # Optional: pass REACT_APP_API as build arg
