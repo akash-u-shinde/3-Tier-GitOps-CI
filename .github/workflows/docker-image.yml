@@ -129,7 +129,7 @@ jobs:
       - build_frontend_docker_image_and_push
     steps:
       - name: Run trivy image scan for backend
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@v0.28.0
         with:
           scan-type: image   
           image_ref: akashshinde1808/backend:${{ env.IMAGE_TAG }}  
@@ -140,7 +140,7 @@ jobs:
           severity: CRITICAL,HIGH
 
       - name: Run trivy image scan for frontend
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@v0.28.0
         with:
           scan-type: image   
           image_ref: akashshinde1808/frontend:${{ env.IMAGE_TAG }}  
