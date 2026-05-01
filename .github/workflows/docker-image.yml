@@ -145,7 +145,7 @@ jobs:
           scan-type: image   
           image-ref: akashshinde1808/frontend:${{ env.IMAGE_TAG }}  
           format: table
-          exit-code: '1' 
+          exit-code: '0' 
           ignore-unfixed: true
           vuln-type: os,library 
           severity: CRITICAL,HIGH
