@@ -155,52 +155,53 @@ jobs:
 
       
 
-  update_cd_repo:
-    runs-on: ubuntu-latest
-    needs: trivy-image-scan
-    steps:
-      - name: Checkout CD repo
-        uses: actions/checkout@v4
-        with:
-          repository: akash-u-shinde/3-Tier-GitOps-CD
-          ref: main
-          token: ${{ secrets.CD_REPO_TOKEN }}
-          path: cd
+update_cd_repo:
+  runs-on: ubuntu-latest
+  needs: trivy-image-scan
 
-      - name: Bump images in manifests (safe)
-        working-directory: cd
-        env:
-          IMAGE_TAG: ${{ env.IMAGE_TAG }}
-        run: |
-          curl -sL https://github.com/mikefarah/yq/releases/download/v4.44.3/yq_linux_amd64 -o yq && sudo install yq /usr/local/bin/yq
+  steps:
+    - name: Checkout CD repo
+      uses: actions/checkout@v4
+      with:
+        repository: akash-u-shinde/3-Tier-GitOps-CD
+        ref: main
+        token: ${{ secrets.CD_REPO_TOKEN }}
+        path: cd
+        persist-credentials: true
 
-          # -- Safety cleanup: remove any accidental .spec.template from Service docs
-          yq -i '(. | select(.kind=="Service")) |= del(.spec.template)' k8s-prod/backend.yaml
-          yq -i '(. | select(.kind=="Service")) |= del(.spec.template)' k8s-prod/frontend.yaml
+    - name: Bump images
+      working-directory: cd
+      env:
+        IMAGE_TAG: ${{ env.IMAGE_TAG }}
+      run: |
+        curl -sL https://github.com/mikefarah/yq/releases/download/v4.44.3/yq_linux_amd64 -o yq && sudo install yq /usr/local/bin/yq
 
-          # -- Update ONLY Deployment images (backend)
-          yq -i '
-            (. | select(.kind=="Deployment")
-               | .spec.template.spec.containers[]
-               | select(.name=="backend")
-               | .image)
-            = "akashshinde1808/backend:" + strenv(IMAGE_TAG)
-          ' k8s-prod/backend.yaml
+        yq -i '(. | select(.kind=="Service")) |= del(.spec.template)' k8s-prod/backend.yaml
+        yq -i '(. | select(.kind=="Service")) |= del(.spec.template)' k8s-prod/frontend.yaml
 
-          # -- Update ONLY Deployment images (frontend)
-          yq -i '
-            (. | select(.kind=="Deployment")
-               | .spec.template.spec.containers[]
-               | select(.name=="frontend")
-               | .image)
-            = "akashshinde1808/frontend:" + strenv(IMAGE_TAG)
-          ' k8s-prod/frontend.yaml
+        yq -i '
+          (. | select(.kind=="Deployment")
+             | .spec.template.spec.containers[]
+             | select(.name=="backend")
+             | .image)
+          = "akashshinde1808/backend:" + strenv(IMAGE_TAG)
+        ' k8s-prod/backend.yaml
 
-      - name: Commit & push to CD repo
-        working-directory: cd
-        run: |
-          git config user.name "ci-bot"
-          git config user.email "ci-bot@users.noreply.github.com"
-          git add -A
-          git commit -m "bump images to ${IMAGE_TAG}" || echo "no changes"
-          git push 
+        yq -i '
+          (. | select(.kind=="Deployment")
+             | .spec.template.spec.containers[]
+             | select(.name=="frontend")
+             | .image)
+          = "akashshinde1808/frontend:" + strenv(IMAGE_TAG)
+        ' k8s-prod/frontend.yaml
+
+    - name: Commit & push
+      working-directory: cd
+      env:
+        IMAGE_TAG: ${{ env.IMAGE_TAG }}
+      run: |
+        git config user.name "ci-bot"
+        git config user.email "ci-bot@users.noreply.github.com"
+        git add -A
+        git commit -m "bump images to ${IMAGE_TAG}" || echo "no changes"
+        git push https://akash-u-shinde:${{ secrets.CD_REPO_TOKEN }}@github.com/akash-u-shinde/3-Tier-GitOps-CD.git
