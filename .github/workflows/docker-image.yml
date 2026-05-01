@@ -139,10 +139,10 @@ jobs:
           vuln-type: os,library
           severity: CRITICAL,HIGH
 
-      - name: Login to DockerHub
+      - name: Login to DockerHub for frontend scan since trivy needs to pull the image for scanning since it is private docker registry
         uses: docker/login-action@v3
         with:
-          username: ${{ secrets.DOCKER_USERNAME }}
+          username: ${{ vars.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}   # or 
 
       - name: Run trivy image scan for frontend
