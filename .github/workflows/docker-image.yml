@@ -155,30 +155,30 @@ jobs:
 
       
 
-  update_cd_repository:
+  update_cd_repo:
     runs-on: ubuntu-latest
     needs: trivy-image-scan
     steps:
-      - name: Checkout CD repository
+      - name: Checkout CD repo
         uses: actions/checkout@v4
         with:
           repository: akash-u-shinde/3-Tier-GitOps-CD
           ref: main
           token: ${{ secrets.CD_REPO_TOKEN }}
-          path: cd 
+          path: cd
 
-      - name: Bump images in manifest files
+      - name: Bump images in manifests (safe)
         working-directory: cd
-        env: 
+        env:
           IMAGE_TAG: ${{ env.IMAGE_TAG }}
         run: |
           curl -sL https://github.com/mikefarah/yq/releases/download/v4.44.3/yq_linux_amd64 -o yq && sudo install yq /usr/local/bin/yq
-    
-          # -- Safely cleanup: Remove any accidental .spec.template from service docs
+
+          # -- Safety cleanup: remove any accidental .spec.template from Service docs
           yq -i '(. | select(.kind=="Service")) |= del(.spec.template)' k8s-prod/backend.yaml
           yq -i '(. | select(.kind=="Service")) |= del(.spec.template)' k8s-prod/frontend.yaml
 
-          # -- Update only Deployment images (backend)
+          # -- Update ONLY Deployment images (backend)
           yq -i '
             (. | select(.kind=="Deployment")
                | .spec.template.spec.containers[]
@@ -187,8 +187,7 @@ jobs:
             = "akashshinde1808/backend:" + strenv(IMAGE_TAG)
           ' k8s-prod/backend.yaml
 
-
-          # -- Update only Deployment images (frontend)
+          # -- Update ONLY Deployment images (frontend)
           yq -i '
             (. | select(.kind=="Deployment")
                | .spec.template.spec.containers[]
@@ -197,11 +196,11 @@ jobs:
             = "akashshinde1808/frontend:" + strenv(IMAGE_TAG) 
           ' k8s-prod/frontend.yaml
 
-          # -- Commit and push to cd repository
-          working-directory: cd
-          run: |
-            git config user.name "ci-bot"
-            git config user.email "ci-bot@users.noreply.github.com"
-            git add -A
-            git commit -m "bump images to ${IMAGE_TAG}" || echo "no changes"
-            git push
+      - name: Commit & push to CD repo
+        working-directory: cd
+        run: |
+          git config user.name "ci-bot"
+          git config user.email "ci-bot@users.noreply.github.com"
+          git add -A
+          git commit -m "bump images to ${IMAGE_TAG}" || echo "no changes"
+          git push
