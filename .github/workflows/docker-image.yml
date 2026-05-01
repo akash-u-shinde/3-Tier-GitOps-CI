@@ -136,7 +136,7 @@ jobs:
           format: table
           exit-code: '1'
           ignore-unfixed: false
-          vuln-type: os,librabry
+          vuln-type: os,library
           severity: CRITICAL,HIGH
 
       - name: Run trivy image scan for frontend
@@ -147,7 +147,7 @@ jobs:
           format: table
           exit-code: '1' 
           ignore-unfixed: false
-          vuln-type: os,librabry
+          vuln-type: os,library 
           severity: CRITICAL,HIGH
 
   update_cd_repository:
