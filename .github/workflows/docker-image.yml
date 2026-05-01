@@ -92,8 +92,8 @@ jobs:
           file: ./api/Dockerfile
           push: true
           tags: |
-            akash-u-shinde/backend:latest
-            akash-u-shinde/backend:${{ env.IMAGE_TAG }}
+            akashshinde1808/backend:latest
+            akashshinde1808/backend:${{ env.IMAGE_TAG }}
 
   build_frontend_docker_image_and_push:
     runs-on: ubuntu-latest
@@ -119,8 +119,8 @@ jobs:
           file: ./client/Dockerfile
           push: true
           tags: |
-            akash-u-shinde/frontend:latest
-            akash-u-shinde/frontend:${{ env.IMAGE_TAG }}
+            akashshinde1808/frontend:latest
+            akashshinde1808/frontend:${{ env.IMAGE_TAG }}
 
   trivy-image-scan:
     runs-on: ubuntu-latest   
@@ -132,7 +132,7 @@ jobs:
         uses: aquasecurity/trivy-action@0.28.0
         with:
           scan-type: image   
-          image_ref: akash-u-shinde/backend:${{ env.IMAGE_TAG }}  
+          image_ref: akashshinde1808/backend:${{ env.IMAGE_TAG }}  
           format: table
           exit-code: '1'
           ignore-unfixed: false
@@ -143,7 +143,7 @@ jobs:
         uses: aquasecurity/trivy-action@0.28.0
         with:
           scan-type: image   
-          image_ref: akash-u-shinde/frontend:${{ env.IMAGE_TAG }}  
+          image_ref: akashshinde1808/frontend:${{ env.IMAGE_TAG }}  
           format: table
           exit-code: '1' 
           ignore-unfixed: false
@@ -179,7 +179,7 @@ jobs:
                | .spec.template.spec.containers[]
                | select(.name=="backend")
                | .image)
-            = "akash-u-shinde/backend:" + strenv(IMAGE_TAG)
+            = "akashshinde1808/backend:" + strenv(IMAGE_TAG)
           ' k8s-prod/backend.yaml
 
 
@@ -189,7 +189,7 @@ jobs:
                | .spec.template.spec.containers[]
                | select(.name=="frontend")
                | .image)
-            = "akash-u-shinde/frontend:" + strenv(IMAGE_TAG) 
+            = "akashshinde1808/frontend:" + strenv(IMAGE_TAG) 
           ' k8s-prod/frontend.yaml
 
           # -- Commit and push to cd repository
