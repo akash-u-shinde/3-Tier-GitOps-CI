@@ -154,51 +154,43 @@ jobs:
           TRIVY_PASSWORD: ${{ secrets.DOCKERHUB_TOKEN }}
 
       
-  update_cd_repo:
-    runs-on: ubuntu-latest
-    needs: trivy-image-scan
-  
-    steps:
-      - name: Checkout CD repo
-        uses: actions/checkout@v4
-        with:
-          repository: akash-u-shinde/3-Tier-GitOps-CD
-          ref: main
-          token: ${{ secrets.CD_REPO_TOKEN }}
-          path: cd
-          persist-credentials: true
-  
-      - name: Bump images
-        working-directory: cd
-        env:
-          IMAGE_TAG: ${{ env.IMAGE_TAG }}
-        run: |
-          curl -sL https://github.com/mikefarah/yq/releases/download/v4.44.3/yq_linux_amd64 -o yq && sudo install yq /usr/local/bin/yq
-  
-          yq -i '(. | select(.kind=="Service")) |= del(.spec.template)' k8s-prod/backend.yaml
-          yq -i '(. | select(.kind=="Service")) |= del(.spec.template)' k8s-prod/frontend.yaml
-  
-          yq -i '
-            (. | select(.kind=="Deployment")
-               | .spec.template.spec.containers[]
-               | select(.name=="backend")
-               | .image)
-            = "akashshinde1808/backend:" + strenv(IMAGE_TAG)
-          ' k8s-prod/backend.yaml
-  
-          yq -i '
-            (. | select(.kind=="Deployment")
-               | .spec.template.spec.containers[]
-               | select(.name=="frontend")
-               | .image)
-            = "akashshinde1808/frontend:" + strenv(IMAGE_TAG)
-          ' k8s-prod/frontend.yaml
-  
-      - name: Commit & push to CD repo
-        working-directory: cd
-        run: |
-          git config --global user.email "akash.shinde1808@gmail.com"
-          git config --global user.name "Akash Shinde"
-          git add -A
-          git commit -m "bump images to ${IMAGE_TAG}" || echo "no changes"
-          git push 
+update_cd_repo:
+  runs-on: ubuntu-latest
+  needs: trivy-image-scan
+
+  steps:
+    - name: Clone CD repo
+      run: |
+        git clone https://akash-u-shinde:${{ secrets.CD_REPO_TOKEN }}@github.com/akash-u-shinde/3-Tier-GitOps-CD.git
+        cd 3-Tier-GitOps-CD
+
+        git config user.name "ci-bot"
+        git config user.email "ci-bot@users.noreply.github.com"
+
+        # Install yq
+        sudo wget https://github.com/mikefarah/yq/releases/download/v4.44.3/yq_linux_amd64 -O /usr/local/bin/yq
+        sudo chmod +x /usr/local/bin/yq
+
+        # Update backend image
+        yq -i '
+          (. | select(.kind=="Deployment")
+             | .spec.template.spec.containers[]
+             | select(.name=="backend")
+             | .image)
+          = "akashshinde1808/backend:'"${{ env.IMAGE_TAG }}"'"
+        ' k8s-prod/backend.yaml
+
+        # Update frontend image
+        yq -i '
+          (. | select(.kind=="Deployment")
+             | .spec.template.spec.containers[]
+             | select(.name=="frontend")
+             | .image)
+          = "akashshinde1808/frontend:'"${{ env.IMAGE_TAG }}"'"
+        ' k8s-prod/frontend.yaml
+
+        # Commit & Push
+        git add .
+        git commit -m "Update image tag to ${{ env.IMAGE_TAG }}" || echo "No changes"
+
+        git push origin main
